@@ -3,6 +3,7 @@
 #
 # 它会：读签名配置 → 找构建工具 → 编译 APK → 用正式密钥签名 → 验签 → 打印版本/指纹/SHA256
 # 签名配置优先读 build\签名配置.ps1（已被 .gitignore 忽略，不会上传）
+param([string]$StageDir = '')
 $ErrorActionPreference = 'Stop'
 $here     = $PSScriptRoot
 $repoRoot = Split-Path -Parent $here
@@ -100,7 +101,7 @@ Write-Host "build-tools: $BuildTools"
 # ---------- 3. 编译 + 签名 ----------
 & (Join-Path $here 'build-apk.ps1') `
     -JdkBin $JdkBin -AndroidJar $AndroidJar -BuildTools $BuildTools `
-    -Keystore $SignKeystore -KsPass $SignStorePass -KeyAlias $SignKeyAlias
+    -Keystore $SignKeystore -KsPass $SignStorePass -KeyAlias $SignKeyAlias -StageDir $StageDir
 if ($LASTEXITCODE -ne 0) { throw '打包失败（见上面的错误）' }
 
 # ---------- 4. 自动验收 ----------
