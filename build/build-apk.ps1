@@ -2,30 +2,34 @@
 #
 # 依赖：JDK 17 + Android SDK（build-tools 的 aapt2/d8/zipalign/apksigner + platform 的 android.jar）
 #
-# 用法：
+# 用法（推荐用 release.ps1，它会读配置并调用本脚本）：
 #   powershell -ExecutionPolicy Bypass -File build/build-apk.ps1 `
-#     -JdkBin     "C:\jdk-17\bin" `
+#     -JdkBin "C:\jdk-17\bin" `
 #     -AndroidJar "C:\android-sdk\platforms\android-34\android.jar" `
 #     -BuildTools "C:\android-sdk\build-tools\34.0.0" `
-#     [-Keystore "path\to\release.keystore" -KsPass "密码" -KeyAlias "别名"]
+#     [-Keystore "D:\签名\release.keystore" -KsPass "密码" -KeyAlias "别名"] `
+#     [-StageDir "D:\build-tmp"]
 #
-# 不传 -Keystore 时用 build/local.keystore（首次自动生成，仅供本地调试，已被 .gitignore 忽略）。
-# aapt2 不认非 ASCII 路径，脚本会自动把工程拷到 %TEMP%\lingwu-apk-build 下构建。
+# 构建目录自动选择：依次实测 %TEMP%、%LOCALAPPDATA%\Temp、仓库 build\apk、仓库 .build，
+# 用 javac 真写一个类文件来验证可写性，第一个成功的就用 —— 避免临时目录被安全软件锁住时报
+# "could not create parent directories"。
 param(
     [string]$JdkBin = "",
     [string]$AndroidJar = "",
     [string]$BuildTools = "",
     [string]$Keystore = "",
     [string]$KsPass = "android",
-    [string]$KeyAlias = "lingwu"
+    [string]$KeyAlias = "lingwu",
+    [string]$StageDir = ""
 )
 $ErrorActionPreference = 'Stop'
 
-$root = Split-Path -Parent $PSScriptRoot
+$root = Split-Path -Parent $PSScriptRoot      # 仓库根
 $srcA = Join-Path $root 'src\android'
 $dist = Join-Path $root 'dist'
 New-Item -ItemType Directory -Path $dist -Force | Out-Null
 
+# ---------- 1. 定位工具 ----------
 if (-not $JdkBin) {
     if ($env:JAVA_HOME) { $JdkBin = Join-Path $env:JAVA_HOME 'bin' }
     else { throw '请用 -JdkBin 指定 JDK 的 bin 目录（或设置 JAVA_HOME）' }
@@ -42,74 +46,115 @@ $apksigner = Join-Path $BuildTools 'apksigner.bat'
 foreach ($p in @($aapt2, $d8Bat, $zipalign, $apksigner)) {
     if (-not (Test-Path $p)) { throw "找不到 $p" }
 }
-if (-not $AndroidJar -or -not (Test-Path $AndroidJar)) { throw "请用 -AndroidJar 指定 android.jar" }
+if (-not $AndroidJar -or -not (Test-Path $AndroidJar)) { throw '请用 -AndroidJar 指定 android.jar' }
 
 $env:JAVA_HOME = Split-Path $JdkBin -Parent
 $env:PATH = $JdkBin + ';' + $env:PATH
 
-$stage = Join-Path $env:TEMP 'lingwu-apk-build'
+# ---------- 2. 选一个 javac 真能写的构建目录 ----------
+function Test-JavacWritable([string]$dir) {
+    try {
+        [void][IO.Directory]::CreateDirectory($dir)
+        $probeSrc = Join-Path $dir '_probe'
+        [void][IO.Directory]::CreateDirectory($probeSrc)
+        $javaFile = Join-Path $probeSrc 'Probe.java'
+        [IO.File]::WriteAllText($javaFile, "public class Probe { public static void main(String[] a) {} }",
+            (New-Object System.Text.UTF8Encoding($false)))
+        $outDir = Join-Path $dir '_probe_out'
+        & $javacExe -nowarn -d $outDir $javaFile 2>&1 | Out-Null
+        $ok = Test-Path (Join-Path $outDir 'Probe.class')
+        Remove-Item -LiteralPath $probeSrc -Recurse -Force -ErrorAction SilentlyContinue
+        Remove-Item -LiteralPath $outDir -Recurse -Force -ErrorAction SilentlyContinue
+        return $ok
+    } catch {
+        return $false
+    }
+}
+
+$candidates = @()
+if ($StageDir) { $candidates += $StageDir }
+if ($env:TEMP)          { $candidates += (Join-Path $env:TEMP 'lingwu-apk-build') }
+if ($env:LOCALAPPDATA)  { $candidates += (Join-Path $env:LOCALAPPDATA 'Temp\lingwu-apk-build') }
+$candidates += (Join-Path $root 'build\apk')
+$candidates += (Join-Path $root '.build')
+
+$stage = $null
+foreach ($c in $candidates) {
+    if (-not $c) { continue }
+    Remove-Item -LiteralPath $c -Recurse -Force -ErrorAction SilentlyContinue
+    Write-Host "尝试构建目录: $c"
+    if (Test-JavacWritable $c) { $stage = $c; break }
+    Write-Host '  ✗ javac 无法写入这里，换下一个' -ForegroundColor Yellow
+}
+if (-not $stage) {
+    throw '找不到 javac 可写的构建目录。请手动指定： -StageDir "D:\my-build-dir"（路径越短、越纯英文越好）'
+}
+Write-Host "使用构建目录: $stage" -ForegroundColor Green
 Remove-Item -LiteralPath $stage -Recurse -Force -ErrorAction SilentlyContinue
-New-Item -ItemType Directory -Path $stage, "$stage\obj", "$stage\dex", "$stage\out", "$stage\tmp" -Force | Out-Null
+
+# ---------- 3. 准备 ----------
+New-Item -ItemType Directory -Path $stage, "$stage\obj", "$stage\dex", "$stage\out" -Force | Out-Null
 Copy-Item -LiteralPath (Join-Path $srcA 'res') -Destination $stage -Recurse -Force
 Copy-Item -LiteralPath (Join-Path $srcA 'AndroidManifest.xml') -Destination $stage -Force
 Copy-Item -LiteralPath $AndroidJar -Destination "$stage\android.jar" -Force
-$env:TEMP = "$stage\tmp"
-$env:TMP  = "$stage\tmp"
-$oldTemp = $env:TEMP
-$oldTmp  = $env:TMP
-$jar = "$stage\android.jar"
 
-Write-Host "构建目录: $stage"
 Push-Location $stage
 try {
-    Write-Host "[1/6] javac"
     $javaFiles = @(Get-ChildItem -Path (Join-Path $srcA 'java') -Filter *.java -Recurse | ForEach-Object { $_.FullName })
-    & $javacExe -encoding UTF-8 -source 8 -target 8 -nowarn -bootclasspath $jar -d "$stage\obj" $javaFiles
+
+    Write-Host '[1/6] javac'
+    & $javacExe -encoding UTF-8 -source 8 -target 8 -nowarn -bootclasspath android.jar -d obj $javaFiles
     if ($LASTEXITCODE -ne 0) { throw 'javac 失败' }
 
-    Write-Host "[2/6] d8"
-    $classFiles = @(Get-ChildItem -Path "$stage\obj" -Filter *.class -Recurse | ForEach-Object { $_.FullName })
-    & $d8Bat --release --lib $jar --min-api 24 --output "$stage\dex" $classFiles
-    if (-not (Test-Path "$stage\dex\classes.dex")) { throw 'd8 未生成 classes.dex' }
+    Write-Host '[2/6] d8'
+    $classFiles = @(Get-ChildItem -Path (Join-Path $stage 'obj') -Filter *.class -Recurse | ForEach-Object { $_.FullName })
+    if ($classFiles.Count -eq 0) { throw 'javac 没产出 class 文件' }
+    & $d8Bat --release --lib android.jar --min-api 24 --output dex $classFiles
+    if (-not (Test-Path (Join-Path $stage 'dex\classes.dex'))) { throw 'd8 未生成 classes.dex' }
 
-    Write-Host "[3/6] aapt2"
+    Write-Host '[3/6] aapt2'
     & $aapt2 compile --dir res -o out\res.zip
     if ($LASTEXITCODE -ne 0) { throw 'aapt2 compile 失败' }
     & $aapt2 link -o out\base.apk -I android.jar --manifest AndroidManifest.xml `
         --min-sdk-version 24 --target-sdk-version 34 --auto-add-overlay out\res.zip
     if ($LASTEXITCODE -ne 0) { throw 'aapt2 link 失败' }
 
-    Write-Host "[4/6] 打包 dex"
-    Copy-Item -LiteralPath "$stage\out\base.apk" -Destination "$stage\out\withdex.apk" -Force
+    Write-Host '[4/6] 打包 dex'
+    Copy-Item -LiteralPath (Join-Path $stage 'out\base.apk') -Destination (Join-Path $stage 'out\withdex.apk') -Force
     Add-Type -AssemblyName System.IO.Compression.FileSystem
-    $zip = [System.IO.Compression.ZipFile]::Open("$stage\out\withdex.apk", 'Update')
+    $zip = [System.IO.Compression.ZipFile]::Open((Join-Path $stage 'out\withdex.apk'), 'Update')
     [void][System.IO.Compression.ZipFileExtensions]::CreateEntryFromFile(
-        $zip, "$stage\dex\classes.dex", 'classes.dex', [System.IO.Compression.CompressionLevel]::Optimal)
+        $zip, (Join-Path $stage 'dex\classes.dex'), 'classes.dex',
+        [System.IO.Compression.CompressionLevel]::Optimal)
     $zip.Dispose()
 
-    Write-Host "[5/6] zipalign"
-    & $zipalign -p -f 4 "$stage\out\withdex.apk" "$stage\out\aligned.apk"
+    Write-Host '[5/6] zipalign'
+    & $zipalign -p -f 4 out\withdex.apk out\aligned.apk
     if ($LASTEXITCODE -ne 0) { throw 'zipalign 失败' }
 
-    Write-Host "[6/6] 签名"
+    Write-Host '[6/6] 签名'
     if (-not $Keystore) {
         $Keystore = Join-Path $root 'build\local.keystore'
         if (-not (Test-Path $Keystore)) {
             Write-Host "  未指定签名，生成本地密钥（仅调试用，git 已忽略）: $Keystore"
             & $keytool -genkeypair -keystore $Keystore -alias $KeyAlias -storepass $KsPass -keypass $KsPass `
-                -keyalg RSA -keysize 2048 -validity 10000 -dname "CN=Lingwu, O=Lingwu, C=CN"
+                -keyalg RSA -keysize 2048 -validity 10000 -dname "CN=Lingwu, O=Lingwu, C=CN" 2>&1 | Out-Null
         }
     }
-    $outApk = Join-Path $dist '凌雾跨设备传输.apk'
-    Remove-Item -LiteralPath $outApk -Force -ErrorAction SilentlyContinue
+    if (-not (Test-Path $Keystore)) { throw "找不到密钥文件：$Keystore" }
+
     & $apksigner sign --ks $Keystore --ks-pass "pass:$KsPass" --key-pass "pass:$KsPass" `
-        --ks-key-alias $KeyAlias --min-sdk-version 24 --out $outApk "$stage\out\aligned.apk"
+        --ks-key-alias $KeyAlias --min-sdk-version 24 --out out\signed.apk out\aligned.apk
     if ($LASTEXITCODE -ne 0) { throw 'apksigner 签名失败' }
 
-    Write-Host "`n===== 校验 ====="
-    & $apksigner verify $outApk
+    $outApk = Join-Path $dist '凌雾跨设备传输.apk'
+    Copy-Item -LiteralPath (Join-Path $stage 'out\signed.apk') -Destination $outApk -Force
+
+    Write-Host ''
+    Write-Host '----- 校验 -----'
+    & $apksigner verify --print-certs $outApk
     $f = Get-Item -LiteralPath $outApk
-    Write-Host ("`n产物: {0}  {1:N1} KB" -f $f.Name, ($f.Length / 1KB))
+    Write-Host ("产物: {0}  {1:N1} KB" -f $f.Name, ($f.Length / 1KB))
 }
 finally {
     Pop-Location
