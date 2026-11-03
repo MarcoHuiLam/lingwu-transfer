@@ -3,7 +3,7 @@
 #
 # 它会：读签名配置 → 找构建工具 → 编译 APK → 用正式密钥签名 → 验签 → 打印版本/指纹/SHA256
 # 签名配置优先读 build\签名配置.ps1（已被 .gitignore 忽略，不会上传）
-param([string]$StageDir = '')
+param([string]$StageDir = '', [string]$KsPass = '')
 $ErrorActionPreference = 'Stop'
 $here     = $PSScriptRoot
 $repoRoot = Split-Path -Parent $here
@@ -48,6 +48,13 @@ if ($cfgPath) {
     Write-Host "已自动识别密钥: $SignKeystore"
 }
 
+if (-not $SignStorePass) { $SignStorePass = $KsPass }
+if (-not $SignStorePass) {
+    Write-Host '请输入签名密钥密码（输入时屏幕不显示）' -ForegroundColor Cyan
+    $sec = Read-Host '密码' -AsSecureString
+    $SignStorePass = [Runtime.InteropServices.Marshal]::PtrToStringBSTR(
+        [Runtime.InteropServices.Marshal]::SecureStringToBSTR($sec))
+}
 if (-not $SignKeyAlias) { $SignKeyAlias = 'lingwu' }
 if (-not (Test-Path -LiteralPath $SignKeystore)) { throw "密钥文件不存在：$SignKeystore" }
 
