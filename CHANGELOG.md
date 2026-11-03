@@ -2,12 +2,12 @@
 
 遵循 [语义化版本](https://semver.org/lang/zh-CN/)。
 
-## v1.3.1 — 2026-11-03
+## v1.3.2 — 2026-11-03
 
 ### 变更
-- 全端署名：电脑端窗口副标题「v1.3.1 · 凌雾工坊」、右下角常驻「凌雾工坊 · MarcoLam」
-- exe 文件属性：公司 = 凌雾工坊，版权 = Copyright © 2026 凌雾工坊 · MarcoLam
-- 手机端页脚署名「凌雾工坊 · MarcoLam ｜ 源码公开 · 个人免费 · 禁止商用」
+- 全端署名：电脑端窗口副标题「v1.3.2 · 凌雾工坊」、右下角常驻「凌雾工坊 - MarcoHuiLam」
+- exe 文件属性：公司 = 凌雾工坊，版权 = Copyright © 2026 凌雾工坊 - MarcoHuiLam
+- 手机端页脚署名「凌雾工坊 - MarcoHuiLam ｜ 源码公开 · 个人免费 · 禁止商用」
 - APK versionCode 5 / versionName 1.3.1
 ## v1.3.0 — 2026-10-31
 

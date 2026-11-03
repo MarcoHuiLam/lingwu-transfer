@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-// Copyright © 2026 凌雾工坊 · MarcoLam — 商业使用需书面授权（83503035@qq.com）
+// Copyright © 2026 凌雾工坊 - MarcoHuiLam — 商业使用需书面授权（83503035@qq.com）
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -91,7 +91,7 @@ namespace Lingwu.Transfer
             };
 
             Lbl(this, "凌雾跨设备传输", Fonts.Get(19f, FontStyle.Bold), Palette.Text, 26, 16, 480, 34);
-            Lbl(this, "手机 ⇄ 电脑 · 局域网直连 · v1.3.1 · 凌雾工坊", Fonts.Get(9f, FontStyle.Regular), Palette.Sub, 28, 52, 480, 20);
+            Lbl(this, "手机 ⇄ 电脑 · 局域网直连 · v1.3.2 · 凌雾工坊", Fonts.Get(9f, FontStyle.Regular), Palette.Sub, 28, 52, 480, 20);
 
             // ---------- 卡片一：状态 / 配对码 / 地址 ----------
             CardPanel c1 = NewCard(24, 84, 512, 210);
@@ -186,11 +186,11 @@ namespace Lingwu.Transfer
             c4.Controls.Add(_list);
 
             // ---------- 底部提示 ----------
-            _hintLabel = Lbl(this, "凌雾工坊 · MarcoLam",
+            _hintLabel = Lbl(this, "凌雾工坊 - MarcoHuiLam",
                 Fonts.Get(8f, FontStyle.Regular), Palette.Sub, 26, 808, 360, 20);
 
             // 作者署名单独放右下角，不会被运行状态覆盖
-            Label author = Lbl(this, "凌雾工坊 · MarcoLam", Fonts.Get(8f, FontStyle.Regular), Palette.Sub, 386, 808, 148, 20);
+            Label author = Lbl(this, "凌雾工坊 - MarcoHuiLam", Fonts.Get(8f, FontStyle.Regular), Palette.Sub, 386, 808, 148, 20);
             author.TextAlign = ContentAlignment.MiddleRight;
             _hintLabel.AutoEllipsis = true;
 

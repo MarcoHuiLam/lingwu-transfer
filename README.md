@@ -2,8 +2,8 @@
 
 > 手机 ⇄ 电脑，同一个局域网内直接传文件。不登录、不上传、不经过任何服务器。
 > Android + Windows 双端，**零第三方依赖**（无 SDK、无统计、无广告）。
-**作者 / Author：凌雾工坊 · MarcoLam** ｜ 源码公开 · 个人使用免费 · 商业使用需书面授权
-© 2026 凌雾工坊 · MarcoLam ｜ 许可证：[PolyForm Noncommercial 1.0.0](LICENSE)
+**作者 / Author：凌雾工坊 - MarcoHuiLam** ｜ 源码公开 · 个人使用免费 · 商业使用需书面授权
+© 2026 凌雾工坊 - MarcoHuiLam ｜ 许可证：[PolyForm Noncommercial 1.0.0](LICENSE)
 
 ![电脑端](docs/界面预览.png)
 

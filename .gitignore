@@ -14,6 +14,8 @@ bin/
 *.p12
 *.pfx
 keystore.properties
+build/签名配置.ps1
+签名配置.ps1
 signing.properties
 
 # ---- 本地运行数据 ----

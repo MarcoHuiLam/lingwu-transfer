@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-// Copyright © 2026 凌雾工坊 · MarcoLam — 商业使用需书面授权（83503035@qq.com）
+// Copyright © 2026 凌雾工坊 - MarcoHuiLam — 商业使用需书面授权（83503035@qq.com）
 package com.lingwu.transfer;
 
 import android.app.Activity;
@@ -187,7 +187,7 @@ public class MainActivity extends Activity {
         scroll.addView(root);
 
         root.addView(tv("凌雾跨设备传输", 23, TEXT, true));
-        TextView sub = tv("手机 ⇄ 电脑 · 局域网直连 · v1.3.1 · 凌雾工坊", 12, SUB, false);
+        TextView sub = tv("手机 ⇄ 电脑 · 局域网直连 · v1.3.2 · 凌雾工坊", 12, SUB, false);
         sub.setPadding(0, dp(4), 0, dp(4));
         root.addView(sub);
 
@@ -330,7 +330,7 @@ public class MainActivity extends Activity {
         c3.addView(tvLog);
         root.addView(c3);
 
-        TextView foot = tv("搜不到电脑：先点「深度搜索」；仍不行就手动填地址 + 配对码，点「测试连接」。\n公共 WiFi 上别传隐私文件。\n\n凌雾工坊 · MarcoLam ｜ 源码公开 · 个人免费 · 禁止商用", 11, SUB, false);
+        TextView foot = tv("搜不到电脑：先点「深度搜索」；仍不行就手动填地址 + 配对码，点「测试连接」。\n公共 WiFi 上别传隐私文件。\n\n凌雾工坊 - MarcoHuiLam ｜ 源码公开 · 个人免费 · 禁止商用", 11, SUB, false);
         foot.setPadding(0, dp(14), 0, 0);
         root.addView(foot);
 

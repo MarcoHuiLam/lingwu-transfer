@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-// Copyright © 2026 凌雾工坊 · MarcoLam — 商业使用需书面授权（83503035@qq.com）
+// Copyright © 2026 凌雾工坊 - MarcoHuiLam — 商业使用需书面授权（83503035@qq.com）
 using System;
 using System.Diagnostics;
 using System.IO;
@@ -13,9 +13,9 @@ using System.Runtime.InteropServices;
 [assembly: System.Reflection.AssemblyDescription("手机 ⇄ 电脑 · 局域网直连文件传输，不经过任何服务器")]
 [assembly: System.Reflection.AssemblyCompany("凌雾工坊")]
 [assembly: System.Reflection.AssemblyProduct("凌雾跨设备传输")]
-[assembly: System.Reflection.AssemblyCopyright("Copyright © 2026 凌雾工坊 · MarcoLam")]
-[assembly: System.Reflection.AssemblyVersion("1.3.1.0")]
-[assembly: System.Reflection.AssemblyFileVersion("1.3.1.0")]
+[assembly: System.Reflection.AssemblyCopyright("Copyright © 2026 凌雾工坊 - MarcoHuiLam")]
+[assembly: System.Reflection.AssemblyVersion("1.3.2.0")]
+[assembly: System.Reflection.AssemblyFileVersion("1.3.2.0")]
 
 namespace Lingwu.Transfer
 {

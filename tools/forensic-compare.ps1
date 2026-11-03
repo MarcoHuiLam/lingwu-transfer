@@ -88,7 +88,7 @@ function Get-ApkInfo([string]$path, [string]$label) {
         $markers = @(
             'LWT1DISC', 'LWT1HERE', 'LWT1',
             'com/lingwu/transfer', 'com.lingwu.transfer',
-            '凌雾跨设备传输', '凌雾工坊', 'MarcoLam',
+            '凌雾跨设备传输', '凌雾工坊', 'MarcoHuiLam',
             '配对码不对', '电脑端已暂停接收', '接收模式已就绪',
             '下载/凌雾传输', '凌雾传输'
         )

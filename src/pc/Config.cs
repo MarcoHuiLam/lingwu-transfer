@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-// Copyright © 2026 凌雾工坊 · MarcoLam — 商业使用需书面授权（83503035@qq.com）
+// Copyright © 2026 凌雾工坊 - MarcoHuiLam — 商业使用需书面授权（83503035@qq.com）
 using System;
 using System.IO;
 using System.Text;
