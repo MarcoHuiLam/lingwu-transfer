@@ -1,4 +1,4 @@
-# 手工构建 Android APK（不用 Gradle）：javac -> d8 -> aapt2 -> 加 dex -> zipalign -> apksigner
+﻿# 手工构建 Android APK（不用 Gradle）：javac -> d8 -> aapt2 -> 加 dex -> zipalign -> apksigner
 #
 # 依赖：JDK 17 + Android SDK（build-tools 的 aapt2/d8/zipalign/apksigner + platform 的 android.jar）
 #
