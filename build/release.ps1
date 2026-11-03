@@ -29,8 +29,8 @@ if ($cfgPath) {
     if (-not (Test-Path -LiteralPath $defaultKs)) {
         Write-Host ''
         Write-Host '找不到签名配置，也找不到默认密钥。请二选一：' -ForegroundColor Red
-        Write-Host '  A) 把 build\签名配置.example.ps1 复制成 build\签名配置.ps1，填好密钥路径与密码'
-        Write-Host '  B) 直接在命令后面加参数： -Keystore <密钥路径> -KsPass <密码>'
+        Write-Host '  A) 在 build\签名配置.ps1 里写密钥路径（该文件不入库）'
+        Write-Host '  B) 命令后面直接带参数： -Keystore <密钥路径> -KsPass <密码>'
         exit 1
     }
     $SignKeystore = $defaultKs
