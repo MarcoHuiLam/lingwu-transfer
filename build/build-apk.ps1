@@ -55,6 +55,8 @@ Copy-Item -LiteralPath (Join-Path $srcA 'AndroidManifest.xml') -Destination $sta
 Copy-Item -LiteralPath $AndroidJar -Destination "$stage\android.jar" -Force
 $env:TEMP = "$stage\tmp"
 $env:TMP  = "$stage\tmp"
+$oldTemp = $env:TEMP
+$oldTmp  = $env:TMP
 $jar = "$stage\android.jar"
 
 Write-Host "构建目录: $stage"

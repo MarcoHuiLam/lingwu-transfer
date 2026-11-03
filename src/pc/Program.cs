@@ -6,6 +6,15 @@ using System.Threading;
 using System.Windows.Forms;
 using System.Runtime.InteropServices;
 
+// 程序属性：显示在 exe「属性 → 详细信息」里，也是源码公开项目的作者署名
+[assembly: System.Reflection.AssemblyTitle("凌雾跨设备传输")]
+[assembly: System.Reflection.AssemblyDescription("手机 ⇄ 电脑 · 局域网直连文件传输，不经过任何服务器")]
+[assembly: System.Reflection.AssemblyCompany("凌雾工坊")]
+[assembly: System.Reflection.AssemblyProduct("凌雾跨设备传输")]
+[assembly: System.Reflection.AssemblyCopyright("Copyright © 2026 凌雾工坊 · MarcoLam")]
+[assembly: System.Reflection.AssemblyVersion("1.3.1.0")]
+[assembly: System.Reflection.AssemblyFileVersion("1.3.1.0")]
+
 namespace Lingwu.Transfer
 {
     static class Program
