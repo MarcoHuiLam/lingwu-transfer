@@ -1,4 +1,4 @@
-# 编译 Windows 端 exe（零依赖：使用 Windows 自带 .NET Framework 编译器）
+﻿# 编译 Windows 端 exe（零依赖：使用 Windows 自带 .NET Framework 编译器）
 # 用法: powershell -ExecutionPolicy Bypass -File build/build-pc.ps1
 $ErrorActionPreference = 'Stop'
 

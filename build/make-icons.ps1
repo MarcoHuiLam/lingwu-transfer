@@ -1,4 +1,4 @@
-# 生成「凌雾跨设备传输」图标：Windows .ico + Android mipmap + 预览图
+﻿# 生成「凌雾跨设备传输」图标：Windows .ico + Android mipmap + 预览图
 $ErrorActionPreference = 'Stop'
 Add-Type -AssemblyName System.Drawing
 
