@@ -73,10 +73,10 @@ try {
     if (-not (Test-Path "$stage\dex\classes.dex")) { throw 'd8 未生成 classes.dex' }
 
     Write-Host "[3/6] aapt2"
-    & $aapt2 compile --dir res -o "$stage\out\res.zip"
+    & $aapt2 compile --dir res -o out\res.zip
     if ($LASTEXITCODE -ne 0) { throw 'aapt2 compile 失败' }
-    & $aapt2 link -o "$stage\out\base.apk" -I $jar --manifest AndroidManifest.xml `
-        --min-sdk-version 24 --target-sdk-version 34 --auto-add-overlay "$stage\out\res.zip"
+    & $aapt2 link -o out\base.apk -I android.jar --manifest AndroidManifest.xml `
+        --min-sdk-version 24 --target-sdk-version 34 --auto-add-overlay out\res.zip
     if ($LASTEXITCODE -ne 0) { throw 'aapt2 link 失败' }
 
     Write-Host "[4/6] 打包 dex"
