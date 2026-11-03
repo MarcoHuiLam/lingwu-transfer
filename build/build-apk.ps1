@@ -1,18 +1,12 @@
 ﻿# 手工构建 Android APK（不用 Gradle）：javac -> d8 -> aapt2 -> 加 dex -> zipalign -> apksigner
 #
 # 依赖：JDK 17 + Android SDK（build-tools 的 aapt2/d8/zipalign/apksigner + platform 的 android.jar）
+# 推荐用 release.ps1 调用（它会读签名配置并传好参数）。
 #
-# 用法（推荐用 release.ps1，它会读配置并调用本脚本）：
-#   powershell -ExecutionPolicy Bypass -File build/build-apk.ps1 `
-#     -JdkBin "C:\jdk-17\bin" `
-#     -AndroidJar "C:\android-sdk\platforms\android-34\android.jar" `
-#     -BuildTools "C:\android-sdk\build-tools\34.0.0" `
-#     [-Keystore "D:\签名\release.keystore" -KsPass "密码" -KeyAlias "别名"] `
-#     [-StageDir "D:\build-tmp"]
-#
-# 构建目录自动选择：依次实测 %TEMP%、%LOCALAPPDATA%\Temp、仓库 build\apk、仓库 .build，
-# 用 javac 真写一个类文件来验证可写性，第一个成功的就用 —— 避免临时目录被安全软件锁住时报
-# "could not create parent directories"。
+# 构建目录自动选择：用 javac 真编一个测试类来验证"能不能写"，依次尝试
+#   %TEMP% → %LOCALAPPDATA%\Temp → 仓库 build\apk → 仓库 .build
+#   → %USERPROFILE%\lingwu-build → D:\lingwu-build → C:\lingwu-build
+# 第一个能写的就用；全失败时打印 javac 的真实原因，并提示用 -StageDir 手动指定。
 param(
     [string]$JdkBin = "",
     [string]$AndroidJar = "",
@@ -24,7 +18,7 @@ param(
 )
 $ErrorActionPreference = 'Stop'
 
-$root = Split-Path -Parent $PSScriptRoot      # 仓库根
+$root = Split-Path -Parent $PSScriptRoot
 $srcA = Join-Path $root 'src\android'
 $dist = Join-Path $root 'dist'
 New-Item -ItemType Directory -Path $dist -Force | Out-Null
@@ -52,7 +46,10 @@ $env:JAVA_HOME = Split-Path $JdkBin -Parent
 $env:PATH = $JdkBin + ';' + $env:PATH
 
 # ---------- 2. 选一个 javac 真能写的构建目录 ----------
+$script:lastJavacError = ''
+
 function Test-JavacWritable([string]$dir) {
+    $script:lastJavacError = ''
     try {
         [void][IO.Directory]::CreateDirectory($dir)
         $probeSrc = Join-Path $dir '_probe'
@@ -61,22 +58,30 @@ function Test-JavacWritable([string]$dir) {
         [IO.File]::WriteAllText($javaFile, "public class Probe { public static void main(String[] a) {} }",
             (New-Object System.Text.UTF8Encoding($false)))
         $outDir = Join-Path $dir '_probe_out'
-        & $javacExe -nowarn -d $outDir $javaFile 2>&1 | Out-Null
+        $err = (& $javacExe -nowarn -d $outDir $javaFile 2>&1 | Out-String)
         $ok = Test-Path (Join-Path $outDir 'Probe.class')
+        if (-not $ok) {
+            $line = ($err -split "`r?`n" | Where-Object { $_ -match '\S' } | Select-Object -First 1)
+            if ($line) { $script:lastJavacError = $line.Trim() }
+        }
         Remove-Item -LiteralPath $probeSrc -Recurse -Force -ErrorAction SilentlyContinue
         Remove-Item -LiteralPath $outDir -Recurse -Force -ErrorAction SilentlyContinue
         return $ok
     } catch {
+        $script:lastJavacError = $_.Exception.Message
         return $false
     }
 }
 
 $candidates = @()
 if ($StageDir) { $candidates += $StageDir }
-if ($env:TEMP)          { $candidates += (Join-Path $env:TEMP 'lingwu-apk-build') }
-if ($env:LOCALAPPDATA)  { $candidates += (Join-Path $env:LOCALAPPDATA 'Temp\lingwu-apk-build') }
+if ($env:TEMP)         { $candidates += (Join-Path $env:TEMP 'lingwu-apk-build') }
+if ($env:LOCALAPPDATA) { $candidates += (Join-Path $env:LOCALAPPDATA 'Temp\lingwu-apk-build') }
 $candidates += (Join-Path $root 'build\apk')
 $candidates += (Join-Path $root '.build')
+if ($env:USERPROFILE) { $candidates += (Join-Path $env:USERPROFILE 'lingwu-build') }
+$candidates += 'D:\lingwu-build'
+$candidates += 'C:\lingwu-build'
 
 $stage = $null
 foreach ($c in $candidates) {
@@ -84,10 +89,14 @@ foreach ($c in $candidates) {
     Remove-Item -LiteralPath $c -Recurse -Force -ErrorAction SilentlyContinue
     Write-Host "尝试构建目录: $c"
     if (Test-JavacWritable $c) { $stage = $c; break }
-    Write-Host '  ✗ javac 无法写入这里，换下一个' -ForegroundColor Yellow
+    if ($script:lastJavacError) {
+        Write-Host "  ✗ 不可写：$($script:lastJavacError)" -ForegroundColor Yellow
+    } else {
+        Write-Host '  ✗ 不可写' -ForegroundColor Yellow
+    }
 }
 if (-not $stage) {
-    throw '找不到 javac 可写的构建目录。请手动指定： -StageDir "D:\my-build-dir"（路径越短、越纯英文越好）'
+    throw '找不到 javac 可写的构建目录。请手动指定 -StageDir，例如 -StageDir "D:\lwbuild"（路径短、纯英文最好）'
 }
 Write-Host "使用构建目录: $stage" -ForegroundColor Green
 Remove-Item -LiteralPath $stage -Recurse -Force -ErrorAction SilentlyContinue
