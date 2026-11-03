@@ -1,4 +1,4 @@
-﻿# 同源取证比对工具 · Forensic Compare
+# 同源取证比对工具 · Forensic Compare
 #
 # 用途：拿到一个可疑 APK，与自己的官方 APK 比对，输出"是否同源"的证据报告。
 #       报告可直接作为向平台投诉、向律师说明、向法院举证的材料附件。
@@ -135,7 +135,7 @@ W "结论建议"
 W "  1) 若「特征字符串」命中 LWT1DISC/LWT1HERE 或包名 com.lingwu.transfer → 同源证据极强"
 W "  2) 若多个条目 SHA256 完全一致（尤其 classes.dex、resources.arsc、mipmap）→ 直接复制进一步坐实"
 W "  3) 若签名证书指纹与你一致 → 对方直接使用了你的安装包（若你用调试密钥，此项证明力较弱，需靠上面两条）"
-W "  4) 下一步：录屏 + 公证 + 平台侵权投诉 + 律师函（详见 维权指南.md）"
+W "  4) 下一步：录屏 + 公证 + 平台侵权投诉 + 律师函（请保留本报告并联系作者）"
 
 if ($Out) {
     [IO.File]::WriteAllText($Out, ($lines -join "`r`n"), (New-Object System.Text.UTF8Encoding($true)))
